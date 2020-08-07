@@ -1,0 +1,2 @@
+discodo==0.2.0a0
+discord.py==1.4.0
