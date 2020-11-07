@@ -1,8 +1,11 @@
-from typing import Any
-from discord.ext import commands
-from . import check_voice_connection
-from utils import formatDuration
 import math
+from typing import Any
+
+from discord.ext import commands
+
+from utils import formatDuration
+
+from . import check_voice_connection
 
 
 class Seek(commands.Cog):

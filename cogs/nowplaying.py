@@ -1,8 +1,11 @@
 import asyncio
-from discord.ext import commands
-from . import check_voice_connection
+
 import discord
-from utils import getProgress, formatDuration
+from discord.ext import commands
+
+from utils import formatDuration, getProgress
+
+from . import check_voice_connection
 
 STATE_EMOJI = {"playing": "▶️", "paused": "⏸️", "stopped": "⏹️"}
 
