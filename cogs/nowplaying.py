@@ -32,12 +32,13 @@ class Nowplaying(commands.Cog):
             elif str(reaction.emoji) == "📌":
                 VC._np_pinned = False if VC._np_pinned else True
 
-                await VC._np_message.edit(
-                    embed=reaction.message.embeds[0].set_footer(
-                        text=f"노래 출처: {State['current']['uploader']} | {State['remainQueue']} 곡 남음"
-                        + ("| 📌" if VC._np_pinned else "")
+                if "current" in State:
+                    await VC._np_message.edit(
+                        embed=reaction.message.embeds[0].set_footer(
+                            text=f"노래 출처: {State['current']['uploader']} | {State.get('remainQueue', 0)} 곡 남음"
+                            + ("| 📌" if VC._np_pinned else "")
+                        )
                     )
-                )
 
             try:
                 await reaction.message.remove_reaction(reaction, user)
@@ -68,10 +69,11 @@ class Nowplaying(commands.Cog):
                         + f" 🔉 **{round(State['options']['volume'] * 100)}%**"
                     ),
                 )
-                embed.set_thumbnail(url=State["current"]["thumbnail"])
+                if State["current"]["thumbnail"]:
+                    embed.set_thumbnail(url=State["current"]["thumbnail"])
                 embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
                 embed.set_footer(
-                    text=f"노래 출처: {State['current']['uploader']} | {State['remainQueue']} 곡 남음"
+                    text=f"노래 출처: {State['current']['uploader']} | {State.get('remainQueue', 0)} 곡 남음"
                     + ("| 📌" if VC._np_pinned else "")
                 )
 
