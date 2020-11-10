@@ -2,8 +2,9 @@ import sys
 
 sys.path.append(r"C:\\Users\\mary\\Desktop\\GitHub\\discodo")
 
-from discord.ext import commands
 import discodo
+from discord.ext import commands
+
 import cogs
 
 print(discodo.__version__)
