@@ -42,3 +42,11 @@ async def check_voice_connection(ctx) -> Any:
         )
 
     return True
+
+
+async def only_in_voice(ctx) -> Any:
+    if not ctx.bot.Audio.getVC(ctx.guild.id, safe=True):
+        await ctx.send("> ❎  이 명령어는 노래 재생 중에만 사용이 가능한 명령어에요.")
+        return False
+
+    return True

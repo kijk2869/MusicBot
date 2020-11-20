@@ -62,7 +62,7 @@ class Seek(commands.Cog):
 
         def tokenize(value: str) -> float:
             try:
-                value: float = value
+                value: float = float(value)
 
                 if math.isinf(value) or math.isnan(value):
                     return
@@ -72,7 +72,7 @@ class Seek(commands.Cog):
                 return
 
         try:
-            Tokenized: list = list(filter(map(tokenize, input.split(":"))))
+            Tokenized: list = list(filter(None, map(tokenize, input.split(":"))))
         except:
             return
 

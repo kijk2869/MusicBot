@@ -36,9 +36,15 @@ class Subtitles(commands.Cog):
 
     @commands.command(name="subtitles")
     @commands.check(check_voice_connection)
-    async def subtitles(self, ctx, value: str) -> None:
+    async def subtitles(self, ctx, value: str = None) -> None:
         VC = self.Bot.Audio.getVC(ctx.guild.id)
         State: dict = await VC.getState()
+        usableSubtitles: list = State.get("current", {}).get("subtitles", {}).keys()
+
+        if not value:
+            return await ctx.send(
+                f"> 사용 가능한 자막: {' '.join(map(lambda x: f'`{x}`', usableSubtitles))}"
+            )
 
         urlMatch = URL_REGEX.match(value)
         if urlMatch:
@@ -46,7 +52,6 @@ class Subtitles(commands.Cog):
         else:
             url = None
 
-        usableSubtitles: list = State.get("current", {}).get("subtitles", {}).keys()
         if value and value not in usableSubtitles:
             return await ctx.send(
                 f"> ❎  `{value}` 자막을 찾을 수 없어요.\n> \n> 사용 가능한 자막: {' '.join(map(lambda x: f'`{x}`', usableSubtitles))}"
@@ -56,7 +61,7 @@ class Subtitles(commands.Cog):
             lang=value, url=url, callback=SubtitleCallback(ctx.channel).callback
         )
 
-        await ctx.send("> ➡️  {f'`{value}` ' if value else ''}자막을 출력할게요!")
+        await ctx.send(f"> ➡️  {f'`{value}` ' if value else ''}자막을 출력할게요!")
 
 
 def setup(Bot):
