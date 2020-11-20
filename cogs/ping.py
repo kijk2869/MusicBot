@@ -1,8 +1,8 @@
 from datetime import datetime
-import discord
-from discord.ext.commands import command, Cog
-from discord.ext.commands.bot import Bot
 
+import discord
+from discord.ext.commands import Cog, command
+from discord.ext.commands.bot import Bot
 from discord.ext.commands.context import Context
 from discord.message import Message
 
