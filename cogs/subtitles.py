@@ -1,8 +1,10 @@
-from discord.ext import commands
-from . import check_voice_connection
-import re
-import discord
 import asyncio
+import re
+
+import discord
+from discord.ext import commands
+
+from . import check_voice_connection
 
 URL_REGEX = re.compile(
     r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
