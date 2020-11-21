@@ -36,7 +36,7 @@ class Subtitles(commands.Cog):
     def __init__(self, Bot) -> None:
         self.Bot = Bot
 
-    @commands.command(name="subtitles")
+    @commands.command(name="subtitles", aliases=["subtitle", "lyrics"])
     @commands.check(check_voice_connection)
     async def subtitles(self, ctx, value: str = None) -> None:
         VC = self.Bot.Audio.getVC(ctx.guild.id)

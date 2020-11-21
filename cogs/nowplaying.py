@@ -61,11 +61,24 @@ class Nowplaying(commands.Cog):
             if not State.get("current"):
                 embed = discord.Embed(title="아무 노래도 재생중이지 않아요!")
             else:
+                Chapters = list(
+                    filter(
+                        lambda x: x["start_time"] <= State["position"] < x["end_time"],
+                        State["current"].get("chapters", []),
+                    )
+                )
+                Chapter = Chapters[0] if Chapters else None
+
                 embed = discord.Embed(
                     title=State["current"]["title"],
                     url=State["current"]["webpage_url"],
                     description=(
-                        f"> ❤️ 음성 전송 서버: **{VC.Node.region}**\n"
+                        (
+                            f"- `[{formatDuration(Chapter['start_time'])} ~ {formatDuration(Chapter['end_time'])}]` **{Chapter['title']}**\n\n"
+                            if Chapter
+                            else ""
+                        )
+                        + f"> ❤️ 음성 전송 서버: **{VC.Node.region}**\n"
                         + f"{STATE_EMOJI[State['state']]} "
                         + getProgress(State["position"], State["duration"])
                         + f" `[{formatDuration(State['position'])}/{formatDuration(State['duration'])}]`"

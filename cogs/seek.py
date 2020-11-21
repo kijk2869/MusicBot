@@ -1,5 +1,5 @@
 import math
-from typing import Any
+from typing import Any, Dict
 
 from discord.ext import commands
 
@@ -14,34 +14,67 @@ class Seek(commands.Cog):
 
     @commands.command(name="seek")
     @commands.check(check_voice_connection)
-    async def seek(self, ctx, *, timeString: str = None) -> None:
+    async def seek(self, ctx, *, inputValue: str = None) -> None:
         VC = self.Bot.Audio.getVC(ctx.guild.id)
         State: dict = await VC.getState()
+        timeString = inputValue
 
         if not State.get("current", {}).get("seekable", False):
             return await ctx.send("> ❎  이 곡은 탐색이 불가능한 곡이에요!")
 
-        if timeString is None:
-            return await ctx.send("> ❎  탐색할 위치를 입력해 주세요!")
+        if timeString is not None:
+            Position = State["position"]
 
-        Position = State["position"]
+            Operator: str = None
+            if timeString.startswith(("+", "-")):
+                Operator, timeString = timeString[0], timeString[1:]
 
-        Operator: str = None
-        if timeString.startswith(("+", "-")):
-            Operator, timeString = timeString[0], timeString[1:]
+            timeSecond: int = self.parseTime(timeString)
 
-        timeSecond: int = self.parseTime(timeString)
-        if not timeSecond:
-            return await ctx.send(
-                "> ❎  정확하지 않은 탐색 시간이에요! [+|-|없음][시간]:[분]:[초] 로 입력해주세요!"
+            if timeSecond:
+                if Operator == "+":
+                    Position += timeSecond
+                elif Operator == "-":
+                    Position -= timeSecond
+                else:
+                    Position = timeSecond
+            else:
+                Position = None
+        else:
+            Position = None
+
+        if Position is None:
+            Chapters: Dict[str, Any] = {
+                Chapter["title"].lower(): Chapter
+                for Chapter in State["current"].get("chapters", [])
+            }
+
+            SelectedChapter: Dict[str, Any] = (
+                Chapters.get(inputValue.lower()) if inputValue else None
             )
 
-        if Operator == "+":
-            Position += timeSecond
-        elif Operator == "-":
-            Position -= timeSecond
-        else:
-            Position = timeSecond
+            if not SelectedChapter:
+
+                def getText(Chapter) -> str:
+                    Text: str = (
+                        f"`{formatDuration(Chapter['start_time'])}` {Chapter['title']}"
+                    )
+
+                    if Chapter["start_time"] <= State["position"] < Chapter["end_time"]:
+                        Text = "**" + Text + "**"
+
+                    return "> " + Text
+
+                return await ctx.send(
+                    "> ❎  정확하지 않은 탐색 시간이에요! [+|-|없음][시간]:[분]:[초] 혹은 챕터 이름으로 입력해주세요!"
+                    + (
+                        ("\n> \n" + "\n".join(map(getText, Chapters.values())))
+                        if Chapters
+                        else ""
+                    )
+                )
+
+            Position = SelectedChapter["start_time"]
 
         if Position > State["duration"]:
             return await ctx.send("> ❎  탐색 시간은 곡 길이보다 길 수 없어요!")
