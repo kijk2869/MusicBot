@@ -27,7 +27,7 @@ class Equalizer(commands.Cog):
     @commands.command(name="equalizer", aliases=["eq"])
     @commands.check(check_voice_connection)
     async def equalizer(
-        self, ctx, selectedFrequency: str = None, selectedGain: int = None
+        self, ctx, selectedFrequency: str = None, selectedGain: float = None
     ) -> None:
         VC = self.Bot.Audio.getVC(ctx.guild.id)
         State: dict = await VC.getState()
@@ -97,8 +97,8 @@ class Equalizer(commands.Cog):
 
             await ctx.send(
                 f"""
-                > 📊  **이퀄라이저**
-                > 🔊 `{selectedFrequency}hz` **{selectedGain:+d}dB**
+                > 📊  **이퀄라이저 효과**
+                > 🔊 `{selectedFrequency}hz` **{selectedGain:+0.1f}dB**
                 > 💡  `노래 효과는 적용되는 데에 5초에서 10초 정도 시간이 걸릴 수 있어요!`
                 """
             )
@@ -110,7 +110,7 @@ class Equalizer(commands.Cog):
     def make_image(self, Equalizer_Set: Dict[str, Any]) -> io.BytesIO:
         Board = Image.open("./image/equalizer_base.png")
         Radio_Button = Image.open("./image/radio_button.png")
-        print(Equalizer_Set)
+
         for Frequency, Gain in Equalizer_Set.items():
             Board.paste(
                 Radio_Button,
