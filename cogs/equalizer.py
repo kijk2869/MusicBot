@@ -1,11 +1,11 @@
+import io
 from typing import Any, Dict
-from discord.ext import commands
+
 import discord
+from discord.ext import commands
+from PIL import Image
 
 from . import check_voice_connection
-
-from PIL import Image
-import io
 
 
 class Equalizer(commands.Cog):
