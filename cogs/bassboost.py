@@ -13,14 +13,17 @@ class Bassboost(commands.Cog):
         VC = self.Bot.Audio.getVC(ctx.guild.id)
         State: dict = await VC.getState()
 
-        boostValue = float(
-            dict(
-                map(
-                    lambda x: x.split("="),
-                    State["options"]["filter"].get("bass", "").split(":"),
-                ),
-            ).get("gain", 0.0)
-        )
+        if "bass" in State["options"]["filter"]:
+            boostValue = float(
+                dict(
+                    map(
+                        lambda x: x.split("="),
+                        State["options"]["filter"]["bass"].split(":"),
+                    ),
+                ).get("gain", 0.0)
+            )
+        else:
+            boostValue = 0.0
 
         if value is None:
             return await ctx.send(
@@ -29,13 +32,16 @@ class Bassboost(commands.Cog):
 
         if value > 500:
             return await ctx.send("❎  매개 변수는 **200%** 보다 클 수 없어요!")
-        elif value <= 0:
-            return await ctx.send("❎ 매개 변수는 **1%** 보다 작을수 없어요!")
+        elif value < 0:
+            return await ctx.send("❎ 매개 변수는 **0%** 보다 작을수 없어요!")
 
         boostValue = round(value / 100 * 7.5, 1)
 
         mergedFilter = State["options"]["filter"]
-        mergedFilter["bass"] = f"gain={boostValue}"
+        if boostValue:
+            mergedFilter["bass"] = f"gain={boostValue}"
+        elif "bass" in mergedFilter:
+            del mergedFilter["bass"]
 
         await VC.setFilter(mergedFilter)
 

@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import traceback
-from typing import Any, Coroutine
+from typing import Any
 
 log = logging.getLogger("musicbot.cogs")
 
@@ -40,6 +40,10 @@ async def check_voice_connection(ctx) -> Any:
         await message.edit(
             content=f"> 🎵  성공적으로 음성 채널 {ctx.author.voice.channel.mention} 에 접속했어요!"
         )
+
+    VC = ctx.bot.Audio.getVC(ctx.guild.id, safe=True)
+    if VC and not hasattr(VC, "channel"):
+        VC.channel = ctx.channel
 
     return True
 

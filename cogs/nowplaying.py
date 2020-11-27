@@ -64,7 +64,7 @@ class Nowplaying(commands.Cog):
                 Chapters = list(
                     filter(
                         lambda x: x["start_time"] <= State["position"] < x["end_time"],
-                        State["current"].get("chapters", []),
+                        State["current"].get("chapters") or [],
                     )
                 )
                 Chapter = Chapters[0] if Chapters else None
