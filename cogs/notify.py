@@ -1,4 +1,5 @@
 from typing import Any, Callable, Coroutine, Dict
+
 from discord.ext import commands
 
 from utils import formatDuration
