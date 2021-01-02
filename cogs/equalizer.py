@@ -21,6 +21,64 @@ class Equalizer(commands.Cog):
         16000: 906,
     }
 
+    PRESETS = {
+        "POP": {
+            63: 0.0,
+            125: 0.0,
+            250: 0.0,
+            500: 0.0,
+            1000: 2.0,
+            2000: 2.0,
+            4000: 3.5,
+            8000: -2.0,
+            16000: -4.0,
+        },
+        "CLASSIC": {
+            63: 0.0,
+            125: 0.0,
+            250: -1.0,
+            500: -6.0,
+            1000: 0.0,
+            2000: 1.0,
+            4000: 1.0,
+            8000: 0.0,
+            16000: 6.0,
+        },
+        "JAZZ": {
+            63: 0.0,
+            125: 0.0,
+            250: 2.5,
+            500: 5.0,
+            1000: -6.0,
+            2000: -2.0,
+            4000: -1.0,
+            8000: 2.0,
+            16000: -1.0,
+        },
+        "ROCK": {
+            63: 0.0,
+            125: 0.0,
+            250: 1.0,
+            500: 3.0,
+            1000: -10.0,
+            2000: -2.0,
+            4000: -1.0,
+            8000: 3.0,
+            16000: 3.0,
+        },
+        "FLAT": {
+            63: 0.0,
+            125: 0.0,
+            250: 0.0,
+            500: 0.0,
+            1000: 0.0,
+            2000: 0.0,
+            4000: 0.0,
+            8000: 0.0,
+            16000: 0.0,
+        },
+    }
+
     def __init__(self, Bot) -> None:
         self.Bot = Bot
 
@@ -66,24 +124,36 @@ class Equalizer(commands.Cog):
                 )
             )
 
-        if selectedFrequency is not None and selectedGain is not None:
+        if selectedFrequency is not None:
             if selectedFrequency.endswith("k") and selectedFrequency[:-1].isdigit():
                 selectedFrequency = str(int(selectedFrequency[:-1]) * 1000)
 
             if (
                 not selectedFrequency.isdigit()
                 or int(selectedFrequency) not in Equalizer_Set.keys()
+                or selectedGain is None
             ):
-                return await ctx.send(
-                    f"> ❎  **{selectedFrequency}hz**는 설정할 수 없는 주파수에요!"
-                )
+                if not selectedFrequency.upper() in self.PRESETS:
+                    return await ctx.send(
+                        f"""
+                        > ❎  **{selectedFrequency}hz**는 설정할 수 없는 주파수에요!
+                        > 
+                        > 🎚️  프리셋: {' '.join([f'`{PRESET}`' for PRESET in self.PRESETS.keys()])}
+                        """
+                    )
 
-            if selectedGain > 10:
-                return await ctx.send("❎  매개 변수는 **10dB** 보다 클 수 없어요!")
-            elif selectedGain < -10:
-                return await ctx.send("❎ 매개 변수는 **-10dB** 보다 작을수 없어요!")
+                Equalizer_Set = self.PRESETS[selectedFrequency.upper()]
 
-            Equalizer_Set[int(selectedFrequency)] = selectedGain
+                effectedMessage = f"`{selectedFrequency.upper()}` 프리셋"
+            else:
+                if selectedGain > 10:
+                    return await ctx.send("❎  매개 변수는 **10dB** 보다 클 수 없어요!")
+                elif selectedGain < -10:
+                    return await ctx.send("❎ 매개 변수는 **-10dB** 보다 작을수 없어요!")
+
+                Equalizer_Set[int(selectedFrequency)] = selectedGain
+
+                effectedMessage = f"`{selectedFrequency}hz` **{selectedGain:+0.1f}dB**"
 
             State["options"]["filter"]["anequalizer"] = "|".join(
                 [
@@ -98,7 +168,7 @@ class Equalizer(commands.Cog):
             await ctx.send(
                 f"""
                 > 📊  **이퀄라이저 효과**
-                > 🔊 `{selectedFrequency}hz` **{selectedGain:+0.1f}dB**
+                > 🔊  {effectedMessage}
                 > 💡  `노래 효과는 적용되는 데에 5초에서 10초 정도 시간이 걸릴 수 있어요!`
                 """
             )

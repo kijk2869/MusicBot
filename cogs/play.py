@@ -11,7 +11,7 @@ class Play(commands.Cog):
 
     @commands.command(name="play")
     @commands.check(check_voice_connection)
-    async def play(self, ctx, Query: str) -> None:
+    async def play(self, ctx, *, Query: str) -> None:
         VC = self.Bot.Audio.getVC(ctx.guild.id)
         message = await ctx.send("> ⏳  노래 로드 중...")
 

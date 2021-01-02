@@ -24,11 +24,11 @@ class SubtitleCallback:
                 self.loop.create_task(self._message.delete())
 
             self._message = await self.channel.send(
-                f'{subtitle.get("previous", "")}\n> {subtitle["current"]}\n{subtitle.get("next", "")}'
+                f'{subtitle.get("previous", "")}\n> {subtitle["current"]}\n{subtitle.get("next") or ""}'
             )
         else:
             await self._message.edit(
-                content=f'{subtitle.get("previous", "")}\n> {subtitle["current"]}\n{subtitle.get("next", "")}'
+                content=f'{subtitle.get("previous", "")}\n> {subtitle["current"]}\n{subtitle.get("next") or ""}'
             )
 
 
