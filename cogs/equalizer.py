@@ -4,6 +4,7 @@ from typing import Any, Dict
 import discord
 from discord.ext import commands
 from PIL import Image
+import copy
 
 from . import check_voice_connection
 
@@ -87,9 +88,6 @@ class Equalizer(commands.Cog):
     async def equalizer(
         self, ctx, selectedFrequency: str = None, selectedGain: float = None
     ) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-        State: dict = await VC.getState()
-
         Equalizer_Set = {
             63: 0.0,
             125: 0.0,
@@ -101,7 +99,7 @@ class Equalizer(commands.Cog):
             8000: 0.0,
             16000: 0.0,
         }
-        if "anequalizer" in State["options"]["filter"]:
+        if "anequalizer" in ctx.voice_client.filter:
 
             def applyEqualizer(LibavOption) -> None:
                 def makeDict(Data):
@@ -118,11 +116,7 @@ class Equalizer(commands.Cog):
 
                 Equalizer_Set[int(Options["f"])] = float(Options["g"])
 
-            list(
-                map(
-                    applyEqualizer, State["options"]["filter"]["anequalizer"].split("|")
-                )
-            )
+            list(map(applyEqualizer, ctx.voice_client.filter["anequalizer"].split("|")))
 
         if selectedFrequency is not None:
             if selectedFrequency.endswith("k") and selectedFrequency[:-1].isdigit():
@@ -155,7 +149,9 @@ class Equalizer(commands.Cog):
 
                 effectedMessage = f"`{selectedFrequency}hz` **{selectedGain:+0.1f}dB**"
 
-            State["options"]["filter"]["anequalizer"] = "|".join(
+            filterOption = copy.copy(ctx.voice_client.filter)
+
+            filterOption["anequalizer"] = "|".join(
                 [
                     f"c0 f={Frequency} w=100 g={Gain}|c1 f={Frequency} w=100 g={Gain}"
                     for Frequency, Gain in Equalizer_Set.items()
@@ -163,7 +159,7 @@ class Equalizer(commands.Cog):
                 ]
             )
 
-            await VC.setFilter(State["options"]["filter"])
+            await ctx.voice_client.setFilter(filterOption)
 
             await ctx.send(
                 f"""

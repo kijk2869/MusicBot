@@ -10,13 +10,8 @@ class Crossfade(commands.Cog):
     @commands.command(name="crossfade", aliases=["cf"])
     @commands.check(check_voice_connection)
     async def crossfade(self, ctx, value: str = None) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-        State: dict = await VC.getState()
-
         if value is None:
-            return await ctx.send(
-                f"> 🔊  현재 크로스페이드 {State['options']['crossfade']:.1f}초"
-            )
+            return await ctx.send(f"> 🔊  현재 크로스페이드 {ctx.voice_client.crossfade:.1f}초")
 
         Operator: str = None
         if value.startswith(("+", "-")):
@@ -27,7 +22,7 @@ class Crossfade(commands.Cog):
         if not crossfadeString.isdigit():
             return await ctx.send("❎  크로스페이드는 [+|-|없음][초] 의 형식만 사용 가능해요!")
 
-        Crossfade = State["options"]["crossfade"]
+        Crossfade = ctx.voice_client.crossfade
         if Operator == "+":
             Crossfade += float(crossfadeString)
         elif Operator == "-":
@@ -40,7 +35,7 @@ class Crossfade(commands.Cog):
         elif Crossfade < 0:
             return await ctx.send("❎  크로스페이드는 최소 **0초** 여야 해요!")
 
-        await VC.setCrossfade(Crossfade)
+        await ctx.voice_client.setCrossfade(Crossfade)
 
         return await ctx.send(f"> 🔊  크로스페이드가 **{Crossfade:.1f}** 로 변경되었어요!")
 

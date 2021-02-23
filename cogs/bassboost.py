@@ -1,3 +1,4 @@
+import copy
 from discord.ext import commands
 
 from . import check_voice_connection
@@ -10,15 +11,12 @@ class Bassboost(commands.Cog):
     @commands.command(name="bassboost", aliases=["베이스부스트", "bb"])
     @commands.check(check_voice_connection)
     async def bassboost(self, ctx, value: int = None) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-        State: dict = await VC.getState()
-
-        if "bass" in State["options"]["filter"]:
+        if "bass" in ctx.voice_client.filter:
             boostValue = float(
                 dict(
                     map(
                         lambda x: x.split("="),
-                        State["options"]["filter"]["bass"].split(":"),
+                        ctx.voice_client.filter["bass"].split(":"),
                     ),
                 ).get("gain", 0.0)
             )
@@ -37,13 +35,13 @@ class Bassboost(commands.Cog):
 
         boostValue = round(value / 100 * 7.5, 1)
 
-        mergedFilter = State["options"]["filter"]
+        mergedFilter = copy.copy(ctx.voice_client.filter)
         if boostValue:
             mergedFilter["bass"] = f"gain={boostValue}"
         elif "bass" in mergedFilter:
             del mergedFilter["bass"]
 
-        await VC.setFilter(mergedFilter)
+        await ctx.voice_client.setFilter(mergedFilter)
 
         return await ctx.send(
             f"""

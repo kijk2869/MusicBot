@@ -10,9 +10,7 @@ class Stop(commands.Cog):
     @commands.command(name="stop")
     @commands.check(only_in_voice)
     async def stop(self, ctx) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-
-        await VC.destroy()
+        await ctx.voice_client.destroy()
 
         await ctx.send("> 🎵  재생중인 음악을 정지하고 대기열을 초기화했어요!")
 

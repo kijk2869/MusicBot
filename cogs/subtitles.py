@@ -39,8 +39,7 @@ class Subtitles(commands.Cog):
     @commands.command(name="subtitles", aliases=["subtitle", "lyrics"])
     @commands.check(check_voice_connection)
     async def subtitles(self, ctx, value: str = None) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-        State: dict = await VC.getState()
+        State: dict = await ctx.voice_client.getState()
         usableSubtitles: list = State.get("current", {}).get("subtitles", {}).keys()
 
         if not value:
@@ -59,7 +58,7 @@ class Subtitles(commands.Cog):
                 f"> ❎  `{value}` 자막을 찾을 수 없어요.\n> \n> 사용 가능한 자막: {' '.join(map(lambda x: f'`{x}`', usableSubtitles))}"
             )
 
-        Data = await VC.getSubtitle(
+        await ctx.voice_client.getSubtitle(
             lang=value, url=url, callback=SubtitleCallback(ctx.channel).callback
         )
 

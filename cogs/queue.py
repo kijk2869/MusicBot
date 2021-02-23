@@ -12,11 +12,7 @@ class Queue(commands.Cog):
     @commands.command(name="queue")
     @commands.check(check_voice_connection)
     async def queue(self, ctx) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-
-        Queue: List[Dict[str, Any]] = await VC.getQueue()
-
-        if not Queue:
+        if ctx.voice_client.Queue:
             return await ctx.invoke(self.Bot.get_command("nowplaying"))
 
 

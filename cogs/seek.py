@@ -15,8 +15,7 @@ class Seek(commands.Cog):
     @commands.command(name="seek")
     @commands.check(check_voice_connection)
     async def seek(self, ctx, *, inputValue: str = None) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-        State: dict = await VC.getState()
+        State = await ctx.voice_client.getState()
         timeString = inputValue
 
         if not State.get("current", {}).get("seekable", False):
@@ -81,7 +80,7 @@ class Seek(commands.Cog):
         if Position < 0:
             return await ctx.send("> ❎  탐색 시간은 0초보다 작을수 없어요!")
 
-        await VC.seek(Position)
+        await ctx.voice_client.seek(Position)
 
         return await ctx.send(
             f"> 🎵  **{State['current']['title']}** 곡의 **{formatDuration(Position)}** 으로 점프했어요!"

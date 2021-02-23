@@ -28,7 +28,7 @@ def load(Bot):
 
 
 async def check_voice_connection(ctx) -> Any:
-    if not ctx.bot.Audio.getVC(ctx.guild.id, safe=True):
+    if not ctx.voice_client:
         if not ctx.author.voice:
             await ctx.send("> 🎵  먼저 음성 채널에 접속해주세요!")
             return False
@@ -41,15 +41,14 @@ async def check_voice_connection(ctx) -> Any:
             content=f"> 🎵  성공적으로 음성 채널 {ctx.author.voice.channel.mention} 에 접속했어요!"
         )
 
-    VC = ctx.bot.Audio.getVC(ctx.guild.id, safe=True)
-    if VC and not hasattr(VC, "channel"):
-        VC.channel = ctx.channel
+    if ctx.voice_client and not hasattr(ctx.voice_client, "channel"):
+        ctx.voice_client.channel = ctx.channel
 
     return True
 
 
 async def only_in_voice(ctx) -> Any:
-    if not ctx.bot.Audio.getVC(ctx.guild.id, safe=True):
+    if not ctx.voice_client:
         await ctx.send("> ❎  이 명령어는 노래 재생 중에만 사용이 가능한 명령어에요.")
         return False
 

@@ -10,13 +10,8 @@ class Volume(commands.Cog):
     @commands.command(name="volume", aliases=["vol"])
     @commands.check(check_voice_connection)
     async def volume(self, ctx, value: str = None) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-        State: dict = await VC.getState()
-
         if value is None:
-            return await ctx.send(
-                f"> 🔊  현재 볼륨 {round(State['options']['volume'] * 100)}%"
-            )
+            return await ctx.send(f"> 🔊  현재 볼륨 {round(ctx.voice_client.volume * 100)}%")
 
         Operator: str = None
         if value.startswith(("+", "-")):
@@ -27,7 +22,7 @@ class Volume(commands.Cog):
         if not volumeString.isdigit():
             return await ctx.send("❎  볼륨은 [+|-|없음][볼륨(정수)] 의 형식만 사용 가능해요!")
 
-        Volume = State["options"]["volume"] * 100
+        Volume = ctx.voice_client.volume * 100
         if Operator == "+":
             Volume += int(volumeString)
         elif Operator == "-":
@@ -40,7 +35,7 @@ class Volume(commands.Cog):
         elif Volume <= 0:
             return await ctx.send("❎  볼륨은 최소 **1%** 여야 해요!")
 
-        await VC.setVolume(Volume / 100)
+        await ctx.voice_client.setVolume(Volume / 100)
 
         return await ctx.send(f"> 🔊  볼륨이 **{round(Volume)}%** 로 변경되었어요!")
 
