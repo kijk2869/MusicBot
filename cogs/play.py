@@ -19,9 +19,11 @@ class Play(commands.Cog):
         if isinstance(Data, list):
             Data = Data[0]
 
-        Index = ctx.voice_client.Queue.index(Data)
+        Index = (
+            ctx.voice_client.Queue.index(Data) + 1 if Data in ctx.voice_client.Queue else 0
+        )
 
-        if Index == 1:
+        if Index == 0:
             await message.edit(
                 content=f"> 🎵  **{Data.title} [{formatDuration(Data.duration)}]**이 곧 재생되어요!"
             )
