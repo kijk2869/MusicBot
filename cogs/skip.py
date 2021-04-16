@@ -12,15 +12,13 @@ class Skip(commands.Cog):
     @commands.command(name="skip")
     @commands.check(check_voice_connection)
     async def skip(self, ctx) -> None:
-        State = await ctx.voice_client.getState()
-
-        if not State.get("current"):
+        if not ctx.voice_client.current:
             return await ctx.send("> 🎵  현재 노래를 재생중이지 않아요!")
 
         await ctx.voice_client.skip()
 
         return await ctx.send(
-            f'> 🎵  **{State["current"]["title"]} [{formatDuration(State["duration"])}]** 곡이 건너뛰어졌어요!'
+            f'> 🎵  **{ctx.voice_client.current["title"]} [{formatDuration(ctx.voice_client.duration)}]** 곡이 건너뛰어졌어요!'
         )
 
 

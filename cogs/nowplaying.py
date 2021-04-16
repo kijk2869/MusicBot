@@ -2,6 +2,8 @@ import asyncio
 
 import discord
 from discord.ext import commands
+from discodo.enums import PlayerState
+
 
 from utils import formatDuration, getProgress
 
@@ -22,23 +24,19 @@ class Nowplaying(commands.Cog):
             return
 
         if VC._np_message and VC._np_message.id == reaction.message.id:
-            State: dict = await VC.getState()
-
             if str(reaction.emoji) == "🌟":
-                Autoplay: bool = await VC.setAutoplay(
-                    False if State["options"]["autoplay"] else True
-                )
+                await VC.setAutoplay(not VC.autoplay)
 
                 await reaction.message.channel.send(
-                    f"> 🌟  추천곡 기능이 **{'켜짐' if Autoplay else '꺼짐'}** 으로 설정되었어요!"
+                    f"> 🌟  추천곡 기능이 **{'켜짐' if VC.autoplay else '꺼짐'}** 으로 설정되었어요!"
                 )
             elif str(reaction.emoji) == "📌":
                 VC._np_pinned = False if VC._np_pinned else True
 
-                if "current" in State:
+                if VC.current:
                     await VC._np_message.edit(
                         embed=reaction.message.embeds[0].set_footer(
-                            text=f"노래 출처: {State['current']['uploader']} | {State.get('remainQueue', 0)} 곡 남음"
+                            text=f"노래 출처: {VC.current.uploader} | {len(VC.Queue)} 곡 남음"
                             + ("| 📌" if VC._np_pinned else "")
                         )
                     )
@@ -51,46 +49,51 @@ class Nowplaying(commands.Cog):
     @commands.command(name="nowplaying", aliases=["np"])
     @commands.check(check_voice_connection)
     async def nowplaying(self, ctx) -> None:
-        VC = self.Bot.Audio.getVC(ctx.guild.id)
-
-        VC._np_pinned = False
+        ctx.voice_client._np_pinned = False
 
         async def make_embed() -> discord.Embed:
-            State: dict = await VC.getState()
-
-            if not State.get("current"):
-                embed = discord.Embed(title="아무 노래도 재생중이지 않아요!")
+            if not ctx.voice_client.current:
+                embed = discord.Embed(title="I'm not playing anything!")
             else:
                 Chapters = list(
                     filter(
-                        lambda x: x["start_time"] <= State["position"] < x["end_time"],
-                        State["current"].get("chapters") or [],
+                        lambda x: x["start_time"]
+                        <= ctx.voice_client.current.position
+                        < x["end_time"],
+                        ctx.voice_client.current.get("chapters") or [],
                     )
                 )
                 Chapter = Chapters[0] if Chapters else None
 
+                STATE_EMOJI = {
+                    PlayerState.PLAYING: "▶️",
+                    PlayerState.PAUSED: "⏸️",
+                    PlayerState.STOPPED: "⏹️",
+                }
+
                 embed = discord.Embed(
-                    title=State["current"]["title"],
-                    url=State["current"]["webpage_url"],
+                    title=ctx.voice_client.current.title,
+                    url=ctx.voice_client.current.webpage_url,
                     description=(
                         (
                             f"- `[{formatDuration(Chapter['start_time'])} ~ {formatDuration(Chapter['end_time'])}]` **{Chapter['title']}**\n\n"
                             if Chapter
                             else ""
                         )
-                        + f"> ❤️ 음성 전송 서버: **{VC.Node.region}**\n"
-                        + f"{STATE_EMOJI[State['state']]} "
-                        + getProgress(State["position"], State["duration"])
-                        + f" `[{formatDuration(State['position'])}/{formatDuration(State['duration'])}]`"
-                        + f" 🔉 **{round(State['options']['volume'] * 100)}%**"
+                        + f"> ❤️ 오디오 노드: **{ctx.voice_client.Node.region}**\n"
+                        + f"{STATE_EMOJI[ctx.voice_client.state]} "
+                        + getProgress(
+                            ctx.voice_client.current.position, ctx.voice_client.duration
+                        )
+                        + f" `[{formatDuration(ctx.voice_client.current.position)}/{formatDuration(ctx.voice_client.current.duration)}]`"
+                        + f" 🔉 **{round(ctx.voice_client.volume * 100)}%**"
                     ),
                 )
-                if State["current"]["thumbnail"]:
-                    embed.set_thumbnail(url=State["current"]["thumbnail"])
-                embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+                if ctx.voice_client.current.thumbnail:
+                    embed.set_thumbnail(url=ctx.voice_client.current.thumbnail)
+
                 embed.set_footer(
-                    text=f"노래 출처: {State['current']['uploader']} | {State.get('remainQueue', 0)} 곡 남음"
-                    + ("| 📌" if VC._np_pinned else "")
+                    text=f"노래 출처: {ctx.voice_client.current.uploader} | {len(ctx.voice_client.Queue)} 곡 남음"
                 )
 
             embed.colour = ctx.guild.me.colour
@@ -98,43 +101,49 @@ class Nowplaying(commands.Cog):
             return embed
 
         async def task() -> None:
-            VC._np_message = None
+            ctx.voice_client._np_message = None
 
             while not ctx.bot.is_closed():
                 embed: discord.Embed = await make_embed()
 
                 if (
-                    VC._np_pinned
-                    and VC._np_message
-                    and VC._np_message.channel.last_message_id != VC._np_message.id
+                    ctx.voice_client._np_pinned
+                    and ctx.voice_client._np_message
+                    and ctx.voice_client._np_message.channel.last_message_id
+                    != ctx.voice_client._np_message.id
                 ):
-                    ctx.bot.loop.create_task(VC._np_message.delete())
+                    ctx.bot.loop.create_task(ctx.voice_client._np_message.delete())
 
-                    VC._np_message = None
+                    ctx.voice_client._np_message = None
 
-                if not VC._np_message:
-                    VC._np_message = await ctx.send(embed=embed)
+                if not ctx.voice_client._np_message:
+                    ctx.voice_client._np_message = await ctx.send(embed=embed)
 
                     ctx.bot.loop.create_task(
                         asyncio.wait(
                             map(
-                                lambda emoji: VC._np_message.add_reaction(emoji),
+                                lambda emoji: ctx.voice_client._np_message.add_reaction(
+                                    emoji
+                                ),
                                 ["🌟", "📌"],
                             )
                         )
                     )
                 else:
                     try:
-                        await VC._np_message.edit(embed=embed)
+                        await ctx.voice_client._np_message.edit(embed=embed)
                     except:
-                        VC._np_message = None
+                        ctx.voice_client._np_message = None
 
                 await asyncio.sleep(5)
 
-        if hasattr(VC, "_np_task") and not VC._np_task.done():
-            VC._np_task.cancel()
+        if (
+            hasattr(ctx.voice_client, "_np_task")
+            and not ctx.voice_client._np_task.done()
+        ):
+            ctx.voice_client._np_task.cancel()
 
-        VC._np_task = ctx.bot.loop.create_task(task())
+        ctx.voice_client._np_task = ctx.bot.loop.create_task(task())
 
 
 def setup(Bot):

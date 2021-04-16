@@ -39,8 +39,7 @@ class Subtitles(commands.Cog):
     @commands.command(name="subtitles", aliases=["subtitle", "lyrics"])
     @commands.check(check_voice_connection)
     async def subtitles(self, ctx, value: str = None) -> None:
-        State: dict = await ctx.voice_client.getState()
-        usableSubtitles: list = State.get("current", {}).get("subtitles", {}).keys()
+        usableSubtitles: list = ctx.voice_client.current.subtitles.keys()
 
         if not value:
             return await ctx.send(

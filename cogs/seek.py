@@ -15,14 +15,13 @@ class Seek(commands.Cog):
     @commands.command(name="seek")
     @commands.check(check_voice_connection)
     async def seek(self, ctx, *, inputValue: str = None) -> None:
-        State = await ctx.voice_client.getState()
         timeString = inputValue
 
-        if not State.get("current", {}).get("seekable", False):
+        if not ctx.voice_client.current.seekable:
             return await ctx.send("> ❎  이 곡은 탐색이 불가능한 곡이에요!")
 
         if timeString is not None:
-            Position = State["position"]
+            Position = ctx.voice_client.position
 
             Operator: str = None
             if timeString.startswith(("+", "-")):
@@ -45,7 +44,7 @@ class Seek(commands.Cog):
         if Position is None:
             Chapters: Dict[str, Any] = {
                 Chapter["title"].lower(): Chapter
-                for Chapter in State["current"].get("chapters", [])
+                for Chapter in ctx.voice_client.current.chapters
             }
 
             SelectedChapter: Dict[str, Any] = (
@@ -59,7 +58,11 @@ class Seek(commands.Cog):
                         f"`{formatDuration(Chapter['start_time'])}` {Chapter['title']}"
                     )
 
-                    if Chapter["start_time"] <= State["position"] < Chapter["end_time"]:
+                    if (
+                        Chapter["start_time"]
+                        <= ctx.voice_client.position
+                        < Chapter["end_time"]
+                    ):
                         Text = "**" + Text + "**"
 
                     return "> " + Text
@@ -75,7 +78,7 @@ class Seek(commands.Cog):
 
             Position = SelectedChapter["start_time"]
 
-        if Position > State["duration"]:
+        if Position > ctx.voice_client.duration:
             return await ctx.send("> ❎  탐색 시간은 곡 길이보다 길 수 없어요!")
         if Position < 0:
             return await ctx.send("> ❎  탐색 시간은 0초보다 작을수 없어요!")
@@ -83,7 +86,7 @@ class Seek(commands.Cog):
         await ctx.voice_client.seek(Position)
 
         return await ctx.send(
-            f"> 🎵  **{State['current']['title']}** 곡의 **{formatDuration(Position)}** 으로 점프했어요!"
+            f"> 🎵  **{ctx.voice_client.current.title}** 곡의 **{formatDuration(Position)}** 으로 점프했어요!"
         )
 
     def parseTime(self, input: Any) -> int:
@@ -104,7 +107,9 @@ class Seek(commands.Cog):
                 return
 
         try:
-            Tokenized: list = list(filter(None, map(tokenize, input.split(":"))))
+            Tokenized: list = list(
+                filter(lambda x: x or x == 0, map(tokenize, input.split(":")))
+            )
         except:
             return
 
