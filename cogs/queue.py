@@ -12,8 +12,10 @@ class Queue(commands.Cog):
     @commands.command(name="queue")
     @commands.check(check_voice_connection)
     async def queue(self, ctx) -> None:
-        if ctx.voice_client.Queue:
+        if not ctx.voice_client.Queue:
             return await ctx.invoke(self.Bot.get_command("nowplaying"))
+
+        return await ctx.send("\n".join([i.title for i in ctx.voice_client.Queue]))
 
 
 def setup(Bot):

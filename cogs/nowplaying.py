@@ -94,6 +94,7 @@ class Nowplaying(commands.Cog):
 
                 embed.set_footer(
                     text=f"노래 출처: {ctx.voice_client.current.uploader} | {len(ctx.voice_client.Queue)} 곡 남음"
+                    + ("| 📌" if ctx.voice_client._np_pinned else "")
                 )
 
             embed.colour = ctx.guild.me.colour
