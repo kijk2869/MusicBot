@@ -118,17 +118,6 @@ class Nowplaying(commands.Cog):
 
                 if not ctx.voice_client._np_message:
                     ctx.voice_client._np_message = await ctx.send(embed=embed)
-
-                    ctx.bot.loop.create_task(
-                        asyncio.wait(
-                            map(
-                                lambda emoji: ctx.voice_client._np_message.add_reaction(
-                                    emoji
-                                ),
-                                ["🌟", "📌"],
-                            )
-                        )
-                    )
                 else:
                     try:
                         await ctx.voice_client._np_message.edit(embed=embed)
