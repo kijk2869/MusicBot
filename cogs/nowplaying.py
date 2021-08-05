@@ -80,7 +80,6 @@ class Nowplaying(commands.Cog):
                             if Chapter
                             else ""
                         )
-                        + f"> ❤️ 오디오 노드: **{ctx.voice_client.Node.region}**\n"
                         + f"{STATE_EMOJI[ctx.voice_client.state]} "
                         + getProgress(
                             ctx.voice_client.current.position, ctx.voice_client.duration
